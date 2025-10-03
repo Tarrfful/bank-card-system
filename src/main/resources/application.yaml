@@ -17,3 +17,8 @@ spring:
 
   liquibase:
     change-log: classpath:db/migration/db.changelog-master.yaml
+
+app:
+  jwt:
+    secret: ${SECRET_KEY}
+    expiration-ms: 3600000
