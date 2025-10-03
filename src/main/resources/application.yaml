@@ -22,3 +22,5 @@ app:
   jwt:
     secret: ${SECRET_KEY}
     expiration-ms: 3600000
+  crypto:
+    secret: ${CRYPTO_SECRET_KEY}
