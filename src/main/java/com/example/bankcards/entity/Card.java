@@ -1,5 +1,6 @@
 package com.example.bankcards.entity;
 
+import com.example.bankcards.util.CryptoConverter;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ public class Card {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Convert(converter = CryptoConverter.class)
     @Column(name = "card_number", nullable = false, unique = true, length = 255)
     private String cardNumber;
 
