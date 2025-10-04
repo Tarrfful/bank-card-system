@@ -17,4 +17,6 @@ public interface CardService {
     Card updateCardStatusByAdmin(Long cardId, CardStatus newStatus);
 
     void transferBetweenCards(CardTransferRequestDto requestDto, String username);
+
+    Page<Card> getAllCards(Long userId, CardStatus status, Pageable pageable);
 }
