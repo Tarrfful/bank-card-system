@@ -10,13 +10,17 @@ import com.example.bankcards.exception.CardNotFoundException;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
+import com.example.bankcards.repository.specifications.CardSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CardServiceImpl implements CardService {
@@ -118,5 +122,23 @@ public class CardServiceImpl implements CardService {
 
         cardRepository.save(sourceCard);
         cardRepository.save(destinationCard);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Card> getAllCards(Long userId, CardStatus status, Pageable pageable) {
+
+        List<Specification<Card>> specs = new ArrayList<>();
+
+        if (userId != null) {
+            specs.add(CardSpecifications.hasUserId(userId));
+        }
+        if (status != null) {
+            specs.add(CardSpecifications.hasStatus(status));
+        }
+
+        Specification<Card> finalSpec = Specification.allOf(specs);
+
+        return cardRepository.findAll(finalSpec, pageable);
     }
 }
