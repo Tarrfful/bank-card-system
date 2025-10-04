@@ -3,6 +3,7 @@ package com.example.bankcards.controller;
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.dto.CardTransferRequestDto;
 import com.example.bankcards.entity.Card;
+import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,6 +40,7 @@ public class CardController {
     @GetMapping
     public ResponseEntity<Page<CardResponseDto>> getMyCards(
             @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) CardStatus status,
             Pageable pageable) {
 
         String username = userDetails.getUsername();
@@ -45,7 +48,7 @@ public class CardController {
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("Authenticated user not found in database"));
 
-        Page<Card> cardPage = cardService.getCardsByUserId(currentUser.getId(), pageable);
+        Page<Card> cardPage = cardService.getCardsByUserId(currentUser.getId(), status, pageable);
 
         Page<CardResponseDto> responseDtoPage = cardMapper.toDtoPage(cardPage);
 

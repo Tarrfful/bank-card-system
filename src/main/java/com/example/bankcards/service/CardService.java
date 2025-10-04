@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 public interface CardService {
     Card createCard(CreateCardRequestDto requestDto);
 
-    Page<Card> getCardsByUserId(Long userId, Pageable pageable);
+    Page<Card> getCardsByUserId(Long userId, CardStatus cardStatus, Pageable pageable);
 
     Card blockCard(Long cardId, String username);
 
@@ -19,4 +19,6 @@ public interface CardService {
     void transferBetweenCards(CardTransferRequestDto requestDto, String username);
 
     Page<Card> getAllCards(Long userId, CardStatus status, Pageable pageable);
+
+    void deleteCard(Long cardId);
 }
