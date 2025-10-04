@@ -5,11 +5,13 @@ import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.CardAlreadyExistsException;
+import com.example.bankcards.exception.CardNotFoundException;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +53,23 @@ public class CardServiceImpl implements CardService {
     @Transactional(readOnly = true)
     public Page<Card> getCardsByUserId(Long userId, Pageable pageable){
         return cardRepository.findByUserId(userId, pageable);
+    }
+
+    @Override
+    @Transactional
+    public Card blockCard(Long cardId, String username) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardNotFoundException("Card with ID " + cardId + " not found."));
+
+        if (!card.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("User does not have permission to modify this card.");
+        }
+
+        if (card.getStatus() == CardStatus.BLOCKED) {
+            throw new IllegalStateException("Card with ID " + cardId + " is already blocked.");
+        }
+
+        card.setStatus(CardStatus.BLOCKED);
+        return cardRepository.save(card);
     }
 }

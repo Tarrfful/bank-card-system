@@ -9,4 +9,6 @@ public interface CardService {
     Card createCard(CreateCardRequestDto requestDto);
 
     Page<Card> getCardsByUserId(Long userId, Pageable pageable);
+
+    Card blockCard(Long cardId, String username);
 }
