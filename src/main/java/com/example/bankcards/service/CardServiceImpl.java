@@ -1,5 +1,6 @@
 package com.example.bankcards.service;
 
+import com.example.bankcards.dto.CardTransferRequestDto;
 import com.example.bankcards.dto.CreateCardRequestDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardStatus;
@@ -82,5 +83,40 @@ public class CardServiceImpl implements CardService {
         card.setStatus(newStatus);
 
         return cardRepository.save(card);
+    }
+
+    @Override
+    @Transactional
+    public void transferBetweenCards(CardTransferRequestDto requestDto, String username) {
+        Long fromCardId = requestDto.getFromCardId();
+        Long toCardId = requestDto.getToCardId();
+        BigDecimal amount = requestDto.getAmount();
+
+        if (fromCardId.equals(toCardId)) {
+            throw new IllegalArgumentException("Source and destination cards cannot be the same.");
+        }
+
+        Card sourceCard = cardRepository.findById(fromCardId)
+                .orElseThrow(() -> new CardNotFoundException("Source card with ID " + fromCardId + " not found."));
+        Card destinationCard = cardRepository.findById(toCardId)
+                .orElseThrow(() -> new CardNotFoundException("Destination card with ID " + toCardId + " not found."));
+
+        if (!sourceCard.getUser().getUsername().equals(username) || !destinationCard.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("User does not have permission to use one of the cards.");
+        }
+
+        if (sourceCard.getStatus() != CardStatus.ACTIVE) {
+            throw new IllegalStateException("Source card is not active.");
+        }
+
+        if (sourceCard.getBalance().compareTo(amount) < 0) {
+            throw new IllegalStateException("Insufficient funds on the source card.");
+        }
+
+        sourceCard.setBalance(sourceCard.getBalance().subtract(amount));
+        destinationCard.setBalance(destinationCard.getBalance().add(amount));
+
+        cardRepository.save(sourceCard);
+        cardRepository.save(destinationCard);
     }
 }
