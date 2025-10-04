@@ -2,6 +2,7 @@ package com.example.bankcards.util;
 
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.entity.Card;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -35,5 +36,12 @@ public class CardMapper {
         }
         String lastFourDigits = cardNumber.substring(cardNumber.length() - 4);
         return "**** **** **** " + lastFourDigits;
+    }
+
+    public Page<CardResponseDto> toDtoPage(Page<Card> cardPage) {
+        if (cardPage == null) {
+            return Page.empty();
+        }
+        return cardPage.map(this::toDto);
     }
 }

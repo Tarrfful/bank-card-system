@@ -8,6 +8,8 @@ import com.example.bankcards.exception.CardAlreadyExistsException;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,5 +45,11 @@ public class CardServiceImpl implements CardService {
         newCard.setStatus(CardStatus.ACTIVE);
 
         return cardRepository.save(newCard);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Card> getCardsByUserId(Long userId, Pageable pageable){
+        return cardRepository.findByUserId(userId, pageable);
     }
 }
