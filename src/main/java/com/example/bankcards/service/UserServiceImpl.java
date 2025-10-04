@@ -5,8 +5,11 @@ import com.example.bankcards.entity.Role;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.RoleNotFoundException;
 import com.example.bankcards.exception.UserAlreadyExistsException;
+import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.RoleRepository;
 import com.example.bankcards.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,5 +49,37 @@ public class UserServiceImpl implements UserService{
         newUser.setRoles(new HashSet<>(Collections.singleton(userRole)));
 
         return userRepository.save(newUser);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional
+    public User assignAdminRole(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found."));
+
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RoleNotFoundException("Error: Role 'ADMIN' is not found."));
+
+        user.getRoles().add(adminRole);
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public User removeAdminRole(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found."));
+
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RoleNotFoundException("Error: Role 'ADMIN' is not found."));
+
+        user.getRoles().remove(adminRole);
+        return userRepository.save(user);
     }
 }
