@@ -2,6 +2,7 @@ package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.dto.CreateCardRequestDto;
+import com.example.bankcards.dto.UpdateCardStatusRequestDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.service.CardService;
 import com.example.bankcards.util.CardMapper;
@@ -29,5 +30,16 @@ public class AdminController {
         CardResponseDto responseDto = cardMapper.toDto(newCard);
 
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/cards/{cardId}/status")
+    public ResponseEntity<CardResponseDto> updateCardStatus(
+            @PathVariable Long cardId,
+            @Valid @RequestBody UpdateCardStatusRequestDto requestDto) {
+
+        Card updatedCard = cardService.updateCardStatusByAdmin(cardId, requestDto.getNewStatus());
+        CardResponseDto responseDto = cardMapper.toDto(updatedCard);
+
+        return ResponseEntity.ok(responseDto);
     }
 }
