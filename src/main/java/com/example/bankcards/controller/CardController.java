@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,5 +46,17 @@ public class CardController {
         Page<CardResponseDto> responseDtoPage = cardMapper.toDtoPage(cardPage);
 
         return ResponseEntity.ok(responseDtoPage);
+    }
+
+    @PatchMapping("/{cardId}/block")
+    public ResponseEntity<CardResponseDto> blockMyCard(
+            @PathVariable Long cardId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Card blockedCard = cardService.blockCard(cardId, userDetails.getUsername());
+
+        CardResponseDto responseDto = cardMapper.toDto(blockedCard);
+
+        return ResponseEntity.ok(responseDto);
     }
 }
