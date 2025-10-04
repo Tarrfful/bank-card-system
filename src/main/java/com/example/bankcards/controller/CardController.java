@@ -9,6 +9,10 @@ import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.CardService;
 import com.example.bankcards.util.CardMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/v1/cards")
+@Tag(name = "Card Controller", description = "Endpoints for current user's card operations (Requires authentication)")
 public class CardController {
     private final CardService cardService;
     private final CardMapper cardMapper;
@@ -37,6 +42,10 @@ public class CardController {
         this.userRepository = userRepository;
     }
 
+    @Operation(summary = "Get my cards", description = "Returns a paginated list of cards owned by the currently authenticated user. Can be filtered by status.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
+    })
     @GetMapping
     public ResponseEntity<Page<CardResponseDto>> getMyCards(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -55,6 +64,12 @@ public class CardController {
         return ResponseEntity.ok(responseDtoPage);
     }
 
+    @Operation(summary = "Block my card", description = "Requests to block a specific card owned by the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Card blocked successfully"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not own this card"),
+            @ApiResponse(responseCode = "404", description = "Card not found")
+    })
     @PatchMapping("/{cardId}/block")
     public ResponseEntity<CardResponseDto> blockMyCard(
             @PathVariable Long cardId,
@@ -67,6 +82,13 @@ public class CardController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @Operation(summary = "Transfer money between my cards", description = "Performs a money transfer between two cards owned by the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transfer successful"),
+            @ApiResponse(responseCode = "400", description = "Bad request (e.g., insufficient funds, card not active)"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not own one of the cards"),
+            @ApiResponse(responseCode = "404", description = "One of the cards not found")
+    })
     @PostMapping("/transfer")
     public ResponseEntity<Void> transferMoney(
             @Valid @RequestBody CardTransferRequestDto requestDto,

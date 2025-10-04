@@ -4,6 +4,10 @@ import com.example.bankcards.dto.ErrorResponseDto;
 import com.example.bankcards.dto.JwtAuthenticationResponseDto;
 import com.example.bankcards.dto.LoginRequestDto;
 import com.example.bankcards.security.JwtTokenProvider;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication Controller", description = "Endpoint for user login")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -29,6 +34,11 @@ public class AuthController {
         this.tokenProvider = tokenProvider;
     }
 
+    @Operation(summary = "User Login", description = "Authenticates a user and returns a JWT token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authentication successful, JWT returned"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid username or password")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequestDto loginRequest) {
         try {

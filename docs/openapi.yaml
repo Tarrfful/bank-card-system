@@ -1,1 +1,576 @@
-# Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+  - url: http://localhost:8088
+    description: Generated server url
+tags:
+  - name: Authentication Controller
+    description: Endpoint for user login
+  - name: User Registration Controller
+    description: Endpoint for new user registration
+  - name: Admin Controller
+    description: Endpoints for administrative operations (Requires ADMIN role)
+  - name: Card Controller
+    description: Endpoints for current user's card operations (Requires authentication)
+paths:
+  /api/v1/users/register:
+    post:
+      tags:
+        - User Registration Controller
+      summary: Register a new user
+      description: Creates a new user account with the USER role.
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequestDto"
+        required: true
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "400":
+          description: Invalid user data provided
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "409":
+          description: User with this username already exists
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+  /api/v1/cards/transfer:
+    post:
+      tags:
+        - Card Controller
+      summary: Transfer money between my cards
+      description: Performs a money transfer between two cards owned by the current
+        user.
+      operationId: transferMoney
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardTransferRequestDto"
+        required: true
+      responses:
+        "200":
+          description: Transfer successful
+        "400":
+          description: "Bad request (e.g., insufficient funds, card not active)"
+        "403":
+          description: Forbidden - User does not own one of the cards
+        "404":
+          description: One of the cards not found
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentication Controller
+      summary: User Login
+      description: Authenticates a user and returns a JWT token.
+      operationId: authenticateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequestDto"
+        required: true
+      responses:
+        "200":
+          description: "Authentication successful, JWT returned"
+          content:
+            '*/*':
+              schema:
+                type: object
+        "401":
+          description: Unauthorized - Invalid username or password
+          content:
+            '*/*':
+              schema:
+                type: object
+  /api/v1/admin/cards:
+    get:
+      tags:
+        - Admin Controller
+      summary: Get all cards with filtering
+      description: Returns a paginated list of all cards in the system. Can be filtered
+        by user ID and/or card status.
+      operationId: getAllCards
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - BLOCKED
+              - EXPIRED
+        - name: pageable
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Pageable"
+      responses:
+        "200":
+          description: Successfully retrieved list
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageCardResponseDto"
+    post:
+      tags:
+        - Admin Controller
+      summary: Create a new bank card
+      description: Creates a new bank card for a specified user.
+      operationId: createCard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCardRequestDto"
+        required: true
+      responses:
+        "201":
+          description: Card created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "400":
+          description: Invalid input data
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "404":
+          description: User to own the card not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "409":
+          description: Card with this number already exists
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+  /api/v1/cards/{cardId}/block:
+    patch:
+      tags:
+        - Card Controller
+      summary: Block my card
+      description: Requests to block a specific card owned by the current user.
+      operationId: blockMyCard
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Card blocked successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "403":
+          description: Forbidden - User does not own this card
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "404":
+          description: Card not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+  /api/v1/admin/users/{userId}/revoke-admin:
+    patch:
+      tags:
+        - Admin Controller
+      summary: Revoke ADMIN role from a user
+      description: Removes the ADMIN role from a user's permissions.
+      operationId: revokeAdminRole
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Role revoked successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "404":
+          description: User not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+  /api/v1/admin/users/{userId}/grant-admin:
+    patch:
+      tags:
+        - Admin Controller
+      summary: Grant ADMIN role to a user
+      description: Adds the ADMIN role to a user's permissions.
+      operationId: grantAdminRole
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Role granted successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "404":
+          description: User not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+  /api/v1/admin/cards/{cardId}/status:
+    patch:
+      tags:
+        - Admin Controller
+      summary: Update status of any card
+      description: "Updates the status of a specific card (e.g., from ACTIVE to BLOCKED)."
+      operationId: updateCardStatus
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCardStatusRequestDto"
+        required: true
+      responses:
+        "200":
+          description: Status updated successfully
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "400":
+          description: Invalid status provided
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+        "404":
+          description: Card not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CardResponseDto"
+  /api/v1/cards:
+    get:
+      tags:
+        - Card Controller
+      summary: Get my cards
+      description: Returns a paginated list of cards owned by the currently authenticated
+        user. Can be filtered by status.
+      operationId: getMyCards
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - BLOCKED
+              - EXPIRED
+        - name: pageable
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Pageable"
+      responses:
+        "200":
+          description: Successfully retrieved list
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageCardResponseDto"
+  /api/v1/admin/users:
+    get:
+      tags:
+        - Admin Controller
+      summary: Get all users
+      description: Returns a paginated list of all users in the system.
+      operationId: getAllUsers
+      parameters:
+        - name: pageable
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/Pageable"
+      responses:
+        "200":
+          description: Successfully retrieved list
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageUserResponseDto"
+  /api/v1/admin/cards/{cardId}:
+    delete:
+      tags:
+        - Admin Controller
+      summary: Delete a card
+      description: Permanently deletes a card from the system.
+      operationId: deleteCard
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Card deleted successfully
+        "404":
+          description: Card not found
+components:
+  schemas:
+    CreateUserRequestDto:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          minLength: 3
+        password:
+          type: string
+          maxLength: 2147483647
+          minLength: 8
+      required:
+        - password
+        - username
+    UserResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+    CardTransferRequestDto:
+      type: object
+      properties:
+        fromCardId:
+          type: integer
+          format: int64
+        toCardId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          minimum: 0.01
+      required:
+        - amount
+        - fromCardId
+        - toCardId
+    LoginRequestDto:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    CreateCardRequestDto:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+          minLength: 1
+          pattern: "^[0-9]{16}$"
+        expiryDate:
+          type: string
+          format: date
+        userId:
+          type: integer
+          format: int64
+      required:
+        - cardNumber
+        - expiryDate
+        - userId
+    CardResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cardNumberMasked:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - BLOCKED
+            - EXPIRED
+        balance:
+          type: number
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+    UpdateCardStatusRequestDto:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          enum:
+            - ACTIVE
+            - BLOCKED
+            - EXPIRED
+      required:
+        - newStatus
+    Pageable:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+        sort:
+          type: array
+          items:
+            type: string
+    PageCardResponseDto:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        first:
+          type: boolean
+        last:
+          type: boolean
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardResponseDto"
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        numberOfElements:
+          type: integer
+          format: int32
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
+        empty:
+          type: boolean
+    PageableObject:
+      type: object
+      properties:
+        paged:
+          type: boolean
+        offset:
+          type: integer
+          format: int64
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        pageSize:
+          type: integer
+          format: int32
+        pageNumber:
+          type: integer
+          format: int32
+        unpaged:
+          type: boolean
+    SortObject:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+        empty:
+          type: boolean
+        unsorted:
+          type: boolean
+    PageUserResponseDto:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        first:
+          type: boolean
+        last:
+          type: boolean
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponseDto"
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        numberOfElements:
+          type: integer
+          format: int32
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
+        empty:
+          type: boolean
