@@ -1,12 +1,14 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.CardResponseDto;
+import com.example.bankcards.dto.CardTransferRequestDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.CardService;
 import com.example.bankcards.util.CardMapper;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -58,5 +62,15 @@ public class CardController {
         CardResponseDto responseDto = cardMapper.toDto(blockedCard);
 
         return ResponseEntity.ok(responseDto);
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<Void> transferMoney(
+            @Valid @RequestBody CardTransferRequestDto requestDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        cardService.transferBetweenCards(requestDto, userDetails.getUsername());
+
+        return ResponseEntity.ok().build();
     }
 }

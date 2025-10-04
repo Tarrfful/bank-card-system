@@ -1,5 +1,6 @@
 package com.example.bankcards.service;
 
+import com.example.bankcards.dto.CardTransferRequestDto;
 import com.example.bankcards.dto.CreateCardRequestDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardStatus;
@@ -14,4 +15,6 @@ public interface CardService {
     Card blockCard(Long cardId, String username);
 
     Card updateCardStatusByAdmin(Long cardId, CardStatus newStatus);
+
+    void transferBetweenCards(CardTransferRequestDto requestDto, String username);
 }
