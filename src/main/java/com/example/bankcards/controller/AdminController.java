@@ -57,4 +57,10 @@ public class AdminController {
 
         return ResponseEntity.ok(responseDtoPage);
     }
+
+    @DeleteMapping("/cards/{cardId}")
+    public ResponseEntity<Void> deleteCard(@PathVariable Long cardId) {
+        cardService.deleteCard(cardId);
+        return ResponseEntity.noContent().build();
+    }
 }

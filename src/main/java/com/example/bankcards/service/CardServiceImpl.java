@@ -56,8 +56,19 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Card> getCardsByUserId(Long userId, Pageable pageable){
-        return cardRepository.findByUserId(userId, pageable);
+    public Page<Card> getCardsByUserId(Long userId, CardStatus status, Pageable pageable) {
+
+        List<Specification<Card>> specs = new ArrayList<>();
+
+        specs.add(CardSpecifications.hasUserId(userId));
+
+        if (status != null) {
+            specs.add(CardSpecifications.hasStatus(status));
+        }
+
+        Specification<Card> finalSpec = Specification.allOf(specs);
+
+        return cardRepository.findAll(finalSpec, pageable);
     }
 
     @Override
@@ -140,5 +151,14 @@ public class CardServiceImpl implements CardService {
         Specification<Card> finalSpec = Specification.allOf(specs);
 
         return cardRepository.findAll(finalSpec, pageable);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCard(Long cardId) {
+        if (!cardRepository.existsById(cardId)) {
+            throw new CardNotFoundException("Card with ID " + cardId + " not found.");
+        }
+        cardRepository.deleteById(cardId);
     }
 }
