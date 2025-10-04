@@ -72,4 +72,15 @@ public class CardServiceImpl implements CardService {
         card.setStatus(CardStatus.BLOCKED);
         return cardRepository.save(card);
     }
+
+    @Override
+    @Transactional
+    public Card updateCardStatusByAdmin(Long cardId, CardStatus newStatus) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardNotFoundException("Card with ID " + cardId + " not found."));
+
+        card.setStatus(newStatus);
+
+        return cardRepository.save(card);
+    }
 }
